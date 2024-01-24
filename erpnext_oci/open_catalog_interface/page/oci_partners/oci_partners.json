@@ -4,7 +4,7 @@
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2021-05-18 21:59:31.348991",
+ "modified": "2024-01-24 09:32:46.784727",
  "modified_by": "Administrator",
  "module": "Open Catalog Interface",
  "name": "oci-partners",
@@ -13,6 +13,9 @@
  "roles": [
   {
    "role": "Purchase User"
+  },
+  {
+   "role": "System Manager"
   }
  ],
  "script": null,

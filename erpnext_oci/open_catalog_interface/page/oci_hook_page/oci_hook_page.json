@@ -4,7 +4,7 @@
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2021-05-29 09:12:50.680725",
+ "modified": "2024-01-24 09:32:37.762629",
  "modified_by": "Administrator",
  "module": "Open Catalog Interface",
  "name": "oci-hook-page",
@@ -13,6 +13,9 @@
  "roles": [
   {
    "role": "Purchase User"
+  },
+  {
+   "role": "System Manager"
   }
  ],
  "script": null,

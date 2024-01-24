@@ -1,7 +1,9 @@
 ## Erpnext Oci
-
 Open Catalog Interface for ERPNext
 
-#### License
+### Version
+#### 1.0.0
+Fixing Module View
 
+### License
 MIT
