@@ -7,13 +7,11 @@
  "field_order": [
   "conname",
   "supplier",
-  "username",
-  "password",
   "type",
   "url",
-  "additionaldata",
   "validate",
   "detail",
+  "url_parameter",
   "fields",
   "item_defaults"
  ],
@@ -27,21 +25,6 @@
    "options": "Supplier",
    "reqd": 1,
    "unique": 1
-  },
-  {
-   "allow_in_quick_entry": 1,
-   "fieldname": "username",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "UserName",
-   "reqd": 1
-  },
-  {
-   "allow_in_quick_entry": 1,
-   "fieldname": "password",
-   "fieldtype": "Password",
-   "in_list_view": 1,
-   "label": "Password"
   },
   {
    "allow_in_quick_entry": 1,
@@ -61,11 +44,6 @@
    "fieldname": "detail",
    "fieldtype": "Check",
    "label": "Detail"
-  },
-  {
-   "fieldname": "additionaldata",
-   "fieldtype": "Data",
-   "label": "AdditionalData"
   },
   {
    "allow_in_quick_entry": 1,
@@ -94,9 +72,15 @@
    "fieldtype": "Table",
    "label": "Item Defaults",
    "options": "Item Default"
+  },
+  {
+   "fieldname": "url_parameter",
+   "fieldtype": "Table",
+   "label": "URL Parameter",
+   "options": "OCI Parameter"
   }
  ],
- "modified": "2024-01-24 09:22:36.395552",
+ "modified": "2024-01-29 16:14:41.424643",
  "modified_by": "Administrator",
  "module": "Open Catalog Interface",
  "name": "OCI Partners",
