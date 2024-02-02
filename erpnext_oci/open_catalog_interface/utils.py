@@ -10,7 +10,7 @@ from frappe import _
 
 
 @frappe.whitelist(allow_guest=True)
-def create_hock_page():
+def create_hock_page(**kwargs):
     try:
         frappe.log_error("create_hock_page", 'create_hock_page')
         # Check has a message 
