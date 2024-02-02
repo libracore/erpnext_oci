@@ -11,64 +11,37 @@ from urllib.parse import unquote
 
 
 @frappe.whitelist()
-def create_hock_page(**kwargs):
+def create_hock_page():
     try:
-        '''
-            # original from repo
-
-            data is always empty because frappe only provide body content as application/json,
-            but OCI transfer data as application/x-www-form-urlencoded
-        '''
-        data = frappe.form_dict
-        frappe.log_error("{0}".format(data), 'create_hock_page: data')
-
-        '''
-            # first workaround try: **kwargs as parameter
-
-            kwargs is always empty because these are only url params
-            but OCI transfer data as application/x-www-form-urlencoded
-        '''
-        frappe.log_error("{0}".format(kwargs), 'create_hock_page: kwargs')
-
-        '''
-            # second workaround:
-            get manually the application/x-www-form-urlencoded body content from the request object and convert it to json
-        '''
-        # decode to utf-8 and url unquote application/x-www-form-urlencoded body content
-        request_data = unquote(frappe.local.request.get_data().decode("utf-8"))
-        frappe.log_error("{0}".format(request_data), 'create_hock_page: request_data')
-
-        # # convert to json 
-        request_data_list = request_data.split("&")
-        request_data_list = [item.split('=') for item in request_data_list]
-        json_data = {key.upper(): value for key, value in request_data_list}
-        json_string = json.dumps(json_data, indent=2)
-        frappe.log_error("{0}".format(json_string), 'create_hock_page: json_string')
-
         main_data = None
         main_data_json_dump = None
+        data = frappe.form_dict
         if '~CALLER' in data.keys():
             main_data = data
             main_data_json_dump = json.dumps(json.loads(str(data).replace("\"","").replace("'","\"")))
-        elif '~CALLER' in json_data:
-            main_data = json_data
-            main_data_json_dump = json_string
+        else:
+            '''
+                workaround:
+                get manually the application/x-www-form-urlencoded body content from the request object and convert it to json
+            '''
+            # decode to utf-8 and url unquote application/x-www-form-urlencoded body content
+            request_data = unquote(frappe.local.request.get_data().decode("utf-8"))
+
+            # convert to json 
+            request_data_list = request_data.split("&")
+            request_data_list = [item.split('=') for item in request_data_list]
+            json_data = {key.upper(): value for key, value in request_data_list}
+            json_string = json.dumps(json_data, indent=2)
         
-        # if (not ('~caller' in data.keys())):
-        #     frappe.local.response["type"] = "redirect"
-        #     frappe.local.response["location"] = "/desk#"
-        #     return
+            if '~CALLER' in json_data:
+                main_data = json_data
+                main_data_json_dump = json_string
+        
         if not main_data:
             frappe.local.response["type"] = "redirect"
             frappe.local.response["location"] = "/desk#"
             return
-
-        # basket = frappe.get_doc({
-        #             "doctype": "OCI Basket",
-        #             "oci_partner" : data['~caller'],
-        #             "date" : date.today(),
-        #             "data" : json.dumps(json.loads(str(data).replace("\"","").replace("'","\"")))
-        #         })
+        
         basket = frappe.get_doc({
                     "doctype": "OCI Basket",
                     "oci_partner" : main_data['~CALLER'],
