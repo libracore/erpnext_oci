@@ -6,36 +6,80 @@ from __future__ import unicode_literals
 import frappe, json
 from datetime import date
 from frappe import _
+from urllib.parse import unquote
 
 
 
 @frappe.whitelist(allow_guest=True)
 def create_hock_page(**kwargs):
     try:
-        frappe.log_error("create_hock_page", 'create_hock_page')
-        # Check has a message 
+        '''
+            # original from repo
+
+            data is always empty because frappe only provide body content as application/json,
+            but OCI transfer data as text/plain
+        '''
         data = frappe.form_dict
         frappe.log_error("{0}".format(data), 'create_hock_page: data')
+
+        '''
+            # first workaround try: **kwargs as parameter
+
+            kwargs is always empty because these are only url params
+            but OCI transfer data as text/plain body content
+        '''
         frappe.log_error("{0}".format(kwargs), 'create_hock_page: kwargs')
-        request_object = frappe.local.request
-        frappe.log_error("{0}".format(request_object), 'create_hock_page: request_object')
-        if(not ('~caller' in data.keys())):
+
+        '''
+            # second workaround: get manually the text/plain body content from the request object and convert it to json
+        '''
+        # decode to utf-8 and url unquote text/plain body content
+        request_data = unquote(frappe.local.request.get_data().decode("utf-8"))
+        frappe.log_error("{0}".format(request_data), 'create_hock_page: request_data')
+
+        # # convert to json 
+        request_data_list = request_data.split("&")
+        request_data_list = [item.split('=') for item in request_data_list]
+        json_data = {key.upper(): value for key, value in request_data_list}
+        json_string = json.dumps(json_data, indent=2)
+        frappe.log_error("{0}".format(json_string), 'create_hock_page: json_string')
+
+        main_data = None
+        main_data_json_dump = None
+        if '~CALLER' in data.keys():
+            main_data = data
+            main_data_json_dump = json.dumps(json.loads(str(data).replace("\"","").replace("'","\"")))
+        elif '~CALLER' in json_data:
+            main_data = json_data
+            main_data_json_dump = json_string
+        
+        # if (not ('~caller' in data.keys())):
+        #     frappe.local.response["type"] = "redirect"
+        #     frappe.local.response["location"] = "/desk#"
+        #     return
+        if not main_data:
             frappe.local.response["type"] = "redirect"
             frappe.local.response["location"] = "/desk#"
             return
 
+        # basket = frappe.get_doc({
+        #             "doctype": "OCI Basket",
+        #             "oci_partner" : data['~caller'],
+        #             "date" : date.today(),
+        #             "data" : json.dumps(json.loads(str(data).replace("\"","").replace("'","\"")))
+        #         })
         basket = frappe.get_doc({
                     "doctype": "OCI Basket",
-                    "oci_partner" : data['~caller'],
+                    "oci_partner" : main_data['~CALLER'],
                     "date" : date.today(),
-                    "data" : json.dumps(json.loads(str(data).replace("\"","").replace("'","\"")))
+                    "data" : main_data_json_dump
                 })
         basket.insert(ignore_permissions=True)
         frappe.db.commit()
         frappe.local.response["type"] = "redirect"
         frappe.local.response["location"] = "/desk#List/OCI%20Basket/List"
     except Exception as err:
-        frappe.log_error("{0}".format(err), 'failed: create_hock_page')
+        frappe.log_error("{0}".format(err), 'OCI Failed: create_hock_page')
 
 
 

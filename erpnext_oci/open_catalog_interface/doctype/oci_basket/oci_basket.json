@@ -30,8 +30,8 @@
   {
    "fieldname": "data",
    "fieldtype": "Code",
-   "hidden": 1,
    "label": "Data",
+   "read_only": 1,
    "set_only_once": 1
   },
   {
@@ -51,7 +51,7 @@
   }
  ],
  "in_create": 1,
- "modified": "2022-09-02 22:41:02.375463",
+ "modified": "2024-02-02 12:12:11.348769",
  "modified_by": "Administrator",
  "module": "Open Catalog Interface",
  "name": "OCI Basket",
