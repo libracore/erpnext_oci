@@ -11,24 +11,28 @@ from frappe import _
 
 @frappe.whitelist(allow_guest=True)
 def create_hock_page():
-    # Check has a message 
-    data = frappe.form_dict
+    try:
+        frappe.log_error("create_hock_page", 'create_hock_page')
+        # Check has a message 
+        data = frappe.form_dict
+        frappe.log_error("{0}".format(data), 'create_hock_page: data')
+        if(not ('~caller' in data.keys())):
+            frappe.local.response["type"] = "redirect"
+            frappe.local.response["location"] = "/desk#"
+            return
 
-    if(not ('~caller' in data.keys())):
+        basket = frappe.get_doc({
+                    "doctype": "OCI Basket",
+                    "oci_partner" : data['~caller'],
+                    "date" : date.today(),
+                    "data" : json.dumps(json.loads(str(data).replace("\"","").replace("'","\"")))
+                })
+        basket.insert(ignore_permissions=True)
+        frappe.db.commit()
         frappe.local.response["type"] = "redirect"
-        frappe.local.response["location"] = "/desk#"
-        return
-
-    basket = frappe.get_doc({
-                "doctype": "OCI Basket",
-                "oci_partner" : data['~caller'],
-                "date" : date.today(),
-                "data" : json.dumps(json.loads(str(data).replace("\"","").replace("'","\"")))
-            })
-    basket.insert(ignore_permissions=True)
-    frappe.db.commit()
-    frappe.local.response["type"] = "redirect"
-    frappe.local.response["location"] = "/desk#List/OCI%20Basket/List"
+        frappe.local.response["location"] = "/desk#List/OCI%20Basket/List"
+    except Exception as err:
+        frappe.log_error("{0}".format(err), 'failed: create_hock_page')
 
 
 
