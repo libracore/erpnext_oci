@@ -10,14 +10,14 @@ from urllib.parse import unquote
 
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def create_hock_page(**kwargs):
     try:
         '''
             # original from repo
 
             data is always empty because frappe only provide body content as application/json,
-            but OCI transfer data as text/plain
+            but OCI transfer data as application/x-www-form-urlencoded
         '''
         data = frappe.form_dict
         frappe.log_error("{0}".format(data), 'create_hock_page: data')
@@ -26,14 +26,15 @@ def create_hock_page(**kwargs):
             # first workaround try: **kwargs as parameter
 
             kwargs is always empty because these are only url params
-            but OCI transfer data as text/plain body content
+            but OCI transfer data as application/x-www-form-urlencoded
         '''
         frappe.log_error("{0}".format(kwargs), 'create_hock_page: kwargs')
 
         '''
-            # second workaround: get manually the text/plain body content from the request object and convert it to json
+            # second workaround:
+            get manually the application/x-www-form-urlencoded body content from the request object and convert it to json
         '''
-        # decode to utf-8 and url unquote text/plain body content
+        # decode to utf-8 and url unquote application/x-www-form-urlencoded body content
         request_data = unquote(frappe.local.request.get_data().decode("utf-8"))
         frappe.log_error("{0}".format(request_data), 'create_hock_page: request_data')
 
