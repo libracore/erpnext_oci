@@ -16,6 +16,7 @@ def create_hock_page(**kwargs):
         # Check has a message 
         data = frappe.form_dict
         frappe.log_error("{0}".format(data), 'create_hock_page: data')
+        frappe.log_error("{0}".format(kwargs), 'create_hock_page: kwargs')
         if(not ('~caller' in data.keys())):
             frappe.local.response["type"] = "redirect"
             frappe.local.response["location"] = "/desk#"
