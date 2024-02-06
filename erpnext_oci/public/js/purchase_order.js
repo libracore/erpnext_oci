@@ -1,7 +1,6 @@
 frappe.ui.form.on('Purchase Order', {
     refresh(frm) {
         if (frm.doc.docstatus == 0) {
-            // button to create sales invoice
             frm.add_custom_button(__("OCI Import"), function() {
                 oci_import(frm);
             });
@@ -12,7 +11,9 @@ frappe.ui.form.on('Purchase Order', {
 function oci_import(frm) {
     var d = new frappe.ui.Dialog({
         'fields': [
-            {'fieldname': 'oci_basket', 'fieldtype': 'Link', 'label': __('OCI Basket'), 'options': 'OCI Basket', 'reqd': 1}
+            {'fieldname': 'oci_basket', 'fieldtype': 'Link', 'label': __('OCI Basket'), 'options': 'OCI Basket', 'reqd': 1,
+            'get_query': function() { return { filters: {'purchase_order': ['!=', 1] } } }
+        }
         ],
         primary_action: function() {
             d.hide();
@@ -23,31 +24,21 @@ function oci_import(frm) {
                     basket: values.oci_basket
                 },
                 "callback": function(response) {
-                    console.log(response.message);
-                    for (var i = 0; i < response.message.length; i++) {
-                        var child = cur_frm.add_child('items');
-                        console.log(response.message[i]);
-                        frappe.model.set_value(child.doctype, child.name, 'item_code', response.message[i].item_code);
-                        frappe.model.set_value(child.doctype, child.name, 'qty', response.message[i].quantity);
+                    cur_frm.set_value("supplier", response.message.supplier);
+                    var tbl = frm.doc.items || [];
+                    var i = tbl.length;
+                    while (i--)
+                    {
+                        cur_frm.get_field("items").grid.grid_rows[i].remove();
                     }
                     cur_frm.refresh_field('items');
-                    // clean up uom and rates
-                    for (var i = 0; i < frm.doc.items.length; i++) {
-                        if (!frm.doc.items[i].uom) {
-                            frappe.call({
-                                "method": "frappe.client.get",
-                                "args": {
-                                    "doctype": "Item",
-                                    "name": frm.doc.items[i].item_code
-                                    },
-                                "async": false,
-                                "callback": function(response) {
-                                    var item = response.message;
-                                    frappe.model.set_value(frm.doc.items[i].doctype, frm.doc.items[i].name, 'uom', item.stock_uom);
-                                }
-                            });
-                        }
+                    for (var i = 0; i < response.message.items.length; i++) {
+                        var child = cur_frm.add_child('items');
+                        frappe.model.set_value(child.doctype, child.name, 'item_code', response.message.items[i].item_code);
+                        frappe.model.set_value(child.doctype, child.name, 'qty', response.message.items[i].quantity);
+                        frappe.model.set_value(child.doctype, child.name, 'uom', response.message.items[i].uom);
                     }
+                    cur_frm.refresh_field('items');
                 }
             });
         },

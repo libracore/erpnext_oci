@@ -102,16 +102,19 @@ def get_basket_data(cdn):
 @frappe.whitelist()
 def get_basket_items(basket):
     oci_basket = frappe.get_doc("OCI Basket", basket)
-    partner = frappe.get_doc("OCI Partners",oci_basket.oci_partner)
+    partner = frappe.get_doc("OCI Partners", oci_basket.oci_partner)
 
     basket_quantity = ""
     item_code = ""
+    basket_uom = ""
 
     for value in partner.fields:
         if(value.fieldtype == "Basket-Quantity"):
             basket_quantity = value.returnfield
         if(value.fieldtype == "Item-Field" and value.fieldname == "item_code"):
             item_code = value.returnfield
+        if(value.fieldtype == "Item-UOM"):
+            basket_uom = value.returnfield
 
     data = json.loads(oci_basket.data)
     result = []
@@ -120,18 +123,26 @@ def get_basket_items(basket):
         if (item_code.replace("%",str(i+1))) not in data:
             break
         
-        item_codename = ""
-        item_quantity = 1
+        item_codename = None
+        item_quantity = None
+        item_uom = None
         #parse data
         if item_code != "" and ((item_code.replace("%",str(i+1))) in data):
-            item_codename = data[item_code.replace("%",str(i+1))]
-        if basket_quantity != "" and ((basket_quantity.replace("%",str(i+1))) in data):
-            item_quantity = data[basket_quantity.replace("%",str(i+1))]
+            item_codename = frappe.db.exists("Item", data[item_code.replace("%",str(i+1))])
+            if not item_codename:
+                item_codename = check_manufactur_number(data[item_code.replace("%",str(i+1))])
+        if basket_quantity != "" and ((basket_quantity.replace("%",str(i+1))) in data) and item_codename:
+            item_quantity = data[basket_quantity.replace("%",str(i+1))] or 1
+            item_uom = data[basket_uom.replace("%",str(i+1))] or None
 
-        result.append({"item_code" : item_codename, "quantity" : item_quantity})
+        if item_codename and item_quantity:
+            result.append({"item_code" : item_codename, "quantity" : item_quantity, "uom": item_uom})
         i = i+1
-
-    return result
+    frappe.db.set_value("OCI Basket", basket, 'purchase_order', 1)
+    return {
+        'items': result,
+        'supplier': partner.supplier
+    }
 
 
 @frappe.whitelist()

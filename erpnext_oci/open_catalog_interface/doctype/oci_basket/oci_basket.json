@@ -8,6 +8,9 @@
   "naming_series",
   "oci_partner",
   "date",
+  "purchase_order",
+  "cb_1",
+  "section_basket",
   "display",
   "data"
  ],
@@ -30,6 +33,7 @@
   {
    "fieldname": "data",
    "fieldtype": "Code",
+   "hidden": 1,
    "label": "Data",
    "read_only": 1,
    "set_only_once": 1
@@ -48,10 +52,25 @@
    "fieldtype": "HTML",
    "label": "Display",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "purchase_order",
+   "fieldtype": "Check",
+   "label": "Purchase Order"
+  },
+  {
+   "fieldname": "cb_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_basket",
+   "fieldtype": "Section Break",
+   "label": "Basket"
   }
  ],
  "in_create": 1,
- "modified": "2024-02-05 10:50:33.467511",
+ "modified": "2024-02-06 10:24:02.187781",
  "modified_by": "Administrator",
  "module": "Open Catalog Interface",
  "name": "OCI Basket",
