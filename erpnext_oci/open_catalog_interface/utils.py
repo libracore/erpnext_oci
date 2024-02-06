@@ -8,8 +8,6 @@ from datetime import date
 from frappe import _
 from urllib.parse import unquote
 
-
-
 @frappe.whitelist()
 def create_hock_page():
     try:
@@ -60,7 +58,7 @@ def create_hock_page():
 @frappe.whitelist()
 def get_basket_data(cdn):
     doc = json.loads(cdn)
-    partner = frappe.get_doc("OCI Partners",doc["oci_partner"])
+    partner = frappe.get_doc("OCI Partners", doc["oci_partner"])
     fields = []
     item_code = ""
     # create fields for display and header
@@ -71,7 +69,6 @@ def get_basket_data(cdn):
             item_code = value.returnfield
 
     data = json.loads(doc['data'])
-
     i = 0 
     values = []
     while True:
@@ -82,12 +79,15 @@ def get_basket_data(cdn):
         # add field infromations
         for z in range(len(fields)):
             details[fields[z].title] = ""
+            
             if (fields[z].returnfield.replace("%",str(i+1)))in data:
                 details[fields[z].title] = data[fields[z].returnfield.replace("%",str(i+1))]
         # check item exist
         exist = True
         if item_code != "" and ((item_code.replace("%",str(i+1))) in data):
-            exist = frappe.db.exists("Item",data[item_code.replace("%",str(i+1))])
+            exist = frappe.db.exists("Item", data[item_code.replace("%",str(i+1))])
+            if not exist:
+                exist = check_manufactur_number(data[item_code.replace("%",str(i+1))])
         details["exist"] = exist
 
         values.append(details)
@@ -170,6 +170,9 @@ def create_items(cdn):
             item_codename = data[item_code.replace("%",str(i+1))]
             exist = frappe.db.exists("Item",item_codename)
         
+        if not exist:
+            exist = check_manufactur_number(item_codename)
+        
         if exist:
             i = i+1
             continue
@@ -184,7 +187,7 @@ def create_items(cdn):
         # add uom infromations
         uomdata = {}
         for z in range(len(uomfields)):
-            uomdata[uomfields[z].fieldname] = itemfields[z].default
+            uomdata[uomfields[z].fieldname] = uomfields[z].default
             if (uomfields[z].returnfield.replace("%",str(i+1)))in data:
                 uomdata[uomfields[z].fieldname] = data[uomfields[z].returnfield.replace("%",str(i+1))]
 
@@ -207,8 +210,8 @@ def create_items(cdn):
 def create_item(item_codename,itemdata,uomdata,pricedata,supplier,supplier_part_no,defaults):
     docdata = {}
     docdata["doctype"] = "Item"
-    docdata["item_code"] = item_codename
-    docdata["show_in_website"] = 1
+    # docdata["item_code"] = item_codename --> Eigener Itemcode, nicht jener vom Hersteller
+    docdata["show_in_website"] = 0
     docdata["is_sales_item"] = 1
     docdata["is_purchase_item"] = 1
     docdata["is_stock_item"] = 1
@@ -234,3 +237,14 @@ def create_item(item_codename,itemdata,uomdata,pricedata,supplier,supplier_part_
         }).insert()
 
     return item_codename
+
+def check_manufactur_number(item_code):
+    item = frappe.db.sql("""
+                         SELECT `parent`
+                         FROM `tabItem Supplier`
+                         WHERE `supplier_part_no` = '{0}'
+                         """.format(item_code), as_dict=True)
+    if len(item) > 0:
+        return item[0].parent
+    else:
+        return None
