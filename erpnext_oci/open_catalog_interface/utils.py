@@ -27,11 +27,16 @@ def create_hock_page():
 
             # convert to json 
             request_data_list = request_data.split("&")
-            request_data_list = [item.split('=') for item in request_data_list]
+            request_data_list = [item.split('=') if '=' in item else (item, '') for item in request_data_list]
             json_data = {key.upper(): value for key, value in request_data_list}
             json_string = json.dumps(json_data, indent=2)
         
             if '~CALLER' in json_data:
+                main_data = json_data
+                main_data_json_dump = json_string
+            elif 'NEW_ITEM-MATNR[1]' in json_data:
+                # wago fallback lösung (bad!)
+                json_data['~CALLER'] = 'Wago'
                 main_data = json_data
                 main_data_json_dump = json_string
         
