@@ -11,6 +11,7 @@
   "url",
   "validate",
   "detail",
+  "use_own_item_code",
   "url_parameter",
   "fields",
   "item_defaults"
@@ -78,9 +79,15 @@
    "fieldtype": "Table",
    "label": "URL Parameter",
    "options": "OCI Parameter"
+  },
+  {
+   "default": "1",
+   "fieldname": "use_own_item_code",
+   "fieldtype": "Check",
+   "label": "Use Own Item Code"
   }
  ],
- "modified": "2024-01-29 16:14:41.424643",
+ "modified": "2024-02-07 09:40:15.585129",
  "modified_by": "Administrator",
  "module": "Open Catalog Interface",
  "name": "OCI Partners",

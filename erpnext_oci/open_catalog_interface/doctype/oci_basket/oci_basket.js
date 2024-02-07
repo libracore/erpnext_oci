@@ -27,7 +27,10 @@ frappe.ui.form.on('OCI Basket', {
             if (localStorage.getItem("all_items_exist") != 1) {
                 frappe.call({
                     method: 'erpnext_oci.open_catalog_interface.utils.create_items',
-                    args: {"cdn": frm.doc},
+                    args: {
+                        "cdn": frm.doc,
+                        "stock_items": localStorage.getItem("stock_items")
+                    },
                     callback: function(r) {
                         frappe.show_alert( r.message );
                         cur_frm.reload_doc();
@@ -37,9 +40,17 @@ frappe.ui.form.on('OCI Basket', {
                 frappe.msgprint("Alle Artikel existieren bereits im ERP.");
             }
         });
+    },
+    chek_stock_items: function(frm) {
+        var affected = $("input[data-check-stock='check']");
+        localStorage.setItem("stock_items", '');
+        for (var i = 0; i < affected.length; i++) {
+            if (affected[i].checked) {
+                localStorage.setItem("stock_items", localStorage.getItem("stock_items") + $(affected[i]).attr("data-item-code") + ",");
+            }
+        }
     }
 });
-
 
 function show_table(data) {
     var all_items_exist = 1;
@@ -51,6 +62,7 @@ function show_table(data) {
         output.push(`<th>${data["fields"][i].title}</td>`);
     }
     output.push('<th>ERP</th>');
+    output.push('<th>Lager</th>');
     output.push('</tr>');
     output.push('</thead>');
     // create lines
@@ -62,14 +74,18 @@ function show_table(data) {
         }
         if (data.values[i]['exist']) {
             output.push(`<td><a href="/desk#Form/Item/${data.values[i]['exist']}">&#9989;</a></td>`);
+            output.push(`<td><input type="checkbox" name="vehicle1"${data.values[i]['stock_check']}></td>`);
         } else {
             output.push('<td>&#10060; </td>');
+            output.push(`<td><input type="checkbox" name="vehicle1"${data.values[i]['stock_check']}></td>`);
             all_items_exist = 0;
         }
         output.push('</tr>');
     }
-    output.push('<tr>');
     output.push('</tbody>');
     document.getElementById('table_body').innerHTML = document.getElementById('table_body').innerHTML + output.join('');
     localStorage.setItem("all_items_exist", all_items_exist);
+    localStorage.setItem("stock_items", '');
 }
+
+

@@ -7,6 +7,7 @@ import frappe, json
 from datetime import date
 from frappe import _
 from urllib.parse import unquote
+from frappe.utils import cint
 
 @frappe.whitelist()
 def create_hock_page():
@@ -95,6 +96,17 @@ def get_basket_data(cdn):
                 exist = check_manufactur_number(data[item_code.replace("%",str(i+1))])
         details["exist"] = exist
 
+        # check stock maintenance
+        stock_item_function = """
+                cur_frm.trigger("chek_stock_items");
+        """
+        details['stock_check'] = """ data-item-code='{0}' data-check-stock='check' onclick='{1}'""".format(data[item_code.replace("%",str(i+1))], stock_item_function)
+        if exist:
+            if cint(frappe.db.get_value("Item", exist, 'is_stock_item')) == 1:
+                details['stock_check'] = ' checked onclick="return false;"'
+            else:
+                details['stock_check'] = ' onclick="return false;"'
+
         values.append(details)
         i = i+1
 
@@ -151,12 +163,15 @@ def get_basket_items(basket):
 
 
 @frappe.whitelist()
-def create_items(cdn):
+def create_items(cdn, stock_items):
     doc = json.loads(cdn)
+    stock_items = stock_items.split(",")
     partner = frappe.get_doc("OCI Partners",doc["oci_partner"])
     supplier = partner.supplier
+    own_item_code = cint(partner.use_own_item_code)
     itemfields = []
     pricefields = []
+    price_units = []
     uomfields = []
     item_code = ""
     result = []
@@ -166,6 +181,8 @@ def create_items(cdn):
             itemfields.append(value)
         if(value.fieldtype == "Item-Price"):
             pricefields.append(value)
+        if(value.fieldtype == "Price-Unit"):
+            price_units.append(value)
         if(value.fieldtype == "Item-UOM"):
             uomfields.append(value)
         if(value.fieldtype == "Item-Field" and value.fieldname == "item_code"):
@@ -205,7 +222,8 @@ def create_items(cdn):
         for z in range(len(uomfields)):
             uomdata[uomfields[z].fieldname] = uomfields[z].default
             if (uomfields[z].returnfield.replace("%",str(i+1)))in data:
-                uomdata[uomfields[z].fieldname] = data[uomfields[z].returnfield.replace("%",str(i+1))]
+                if frappe.db.exists("UOM", data[uomfields[z].returnfield.replace("%",str(i+1))]):
+                    uomdata[uomfields[z].fieldname] = data[uomfields[z].returnfield.replace("%",str(i+1))]
 
         # add price infromations
         pricedata = [len(pricefields)]
@@ -215,22 +233,30 @@ def create_items(cdn):
             if (pricefields[z].pricelist != None):
                 pricedata[z]['pricelist'] = pricefields[z].pricelist
             if (pricefields[z].returnfield.replace("%",str(i+1)))in data:
-                pricedata[z]['price'] = data[pricefields[z].returnfield.replace("%",str(i+1))]
+                price_unit_factor = 1
+                for zz in range(len(price_units)):
+                    if (price_units[zz].returnfield.replace("%",str(i+1)))in data:
+                        price_unit_factor = int(data[price_units[zz].returnfield.replace("%",str(i+1))]) or 1
+                pricedata[z]['price'] = float(data[pricefields[z].returnfield.replace("%",str(i+1))]) / price_unit_factor
 
 
-        result.append(create_item(item_codename,itemdata,uomdata,pricedata,supplier,item_codename,partner.item_defaults))
+        result.append(create_item(item_codename, itemdata, uomdata, pricedata, supplier, item_codename, partner.item_defaults, own_item_code, stock_items))
         i = i+1	
 
     return "Items added: <br/>" + "<br/>".join(result)
 
-def create_item(item_codename,itemdata,uomdata,pricedata,supplier,supplier_part_no,defaults):
+def create_item(item_codename, itemdata, uomdata, pricedata, supplier, supplier_part_no, defaults, own_item_code, stock_items):
     docdata = {}
     docdata["doctype"] = "Item"
-    # docdata["item_code"] = item_codename --> Eigener Itemcode, nicht jener vom Hersteller
+    if own_item_code != 1:
+        docdata["item_code"] = item_codename
     docdata["show_in_website"] = 0
     docdata["is_sales_item"] = 1
     docdata["is_purchase_item"] = 1
-    docdata["is_stock_item"] = 1
+    if supplier_part_no in stock_items:
+        docdata["is_stock_item"] = 1
+    else:
+        docdata["is_stock_item"] = 0
     for key,field in itemdata.items():
         docdata[key] = field
     for key,field in uomdata.items():
@@ -249,7 +275,8 @@ def create_item(item_codename,itemdata,uomdata,pricedata,supplier,supplier_part_
             "doctype": "Item Price",
             "price_list": price["pricelist"],
             "item_code": new_item.item_code,
-            "price_list_rate": price["price"]
+            "price_list_rate": price["price"],
+            "supplier": supplier
         }).insert()
 
     return item_codename
