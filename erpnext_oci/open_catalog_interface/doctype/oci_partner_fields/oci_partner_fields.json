@@ -9,8 +9,10 @@
   "fieldtype",
   "fieldname",
   "default",
+  "max_length",
   "pricelist",
-  "show_in_table"
+  "show_in_table",
+  "column_width"
  ],
  "fields": [
   {
@@ -63,10 +65,22 @@
    "fieldname": "default",
    "fieldtype": "Data",
    "label": "Default"
+  },
+  {
+   "depends_on": "eval:doc.fieldtype == \"Item-Field\"",
+   "fieldname": "max_length",
+   "fieldtype": "Int",
+   "label": "Max Length"
+  },
+  {
+   "depends_on": "eval:doc.show_in_table",
+   "fieldname": "column_width",
+   "fieldtype": "Int",
+   "label": "Column Width (%)"
   }
  ],
  "istable": 1,
- "modified": "2024-02-07 09:02:10.185272",
+ "modified": "2024-02-16 13:23:36.157904",
  "modified_by": "Administrator",
  "module": "Open Catalog Interface",
  "name": "OCI Partner Fields",

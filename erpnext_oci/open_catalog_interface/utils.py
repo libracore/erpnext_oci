@@ -215,7 +215,10 @@ def create_items(cdn, stock_items):
         for z in range(len(itemfields)):
             itemdata[itemfields[z].fieldname] = itemfields[z].default
             if (itemfields[z].returnfield.replace("%",str(i+1)))in data:
-                itemdata[itemfields[z].fieldname] = data[itemfields[z].returnfield.replace("%",str(i+1))]
+                if int(itemfields[z].max_length) > 0:
+                    itemdata[itemfields[z].fieldname] = str(data[itemfields[z].returnfield.replace("%",str(i+1))])[:int(itemfields[z].max_length)]
+                else:
+                    itemdata[itemfields[z].fieldname] = data[itemfields[z].returnfield.replace("%",str(i+1))]
 
         # add uom infromations
         uomdata = {}

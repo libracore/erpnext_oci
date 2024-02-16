@@ -59,10 +59,10 @@ function show_table(data) {
     output.push('<thead>');
     output.push('<tr>');
     for(var i = 0; i < data["fields"].length ;i++){
-        output.push(`<th>${data["fields"][i].title}</td>`);
+        output.push(`<th style="width: ${data["fields"][i].column_width}%;">${data["fields"][i].title}</td>`);
     }
-    output.push('<th>ERP</th>');
-    output.push('<th>Lager</th>');
+    output.push('<th style="width: 5%;">ERP</th>');
+    output.push('<th style="width: 5%;">Lager</th>');
     output.push('</tr>');
     output.push('</thead>');
     // create lines
@@ -70,7 +70,7 @@ function show_table(data) {
     for(var i = 0; i < data.values.length ;i++){
         output.push('<tr>');
         for(var z = 0; z < data.fields.length ;z++){
-            output.push(`<td>${data.values[i][data.fields[z].title]}</td>`);
+            output.push(`<td style="word-wrap: break-word;">${data.values[i][data.fields[z].title]}</td>`);
         }
         if (data.values[i]['exist']) {
             output.push(`<td><a href="/desk#Form/Item/${data.values[i]['exist']}">&#9989;</a></td>`);
