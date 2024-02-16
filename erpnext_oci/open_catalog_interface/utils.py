@@ -23,6 +23,7 @@ def create_hock_page():
                 workaround:
                 get manually the application/x-www-form-urlencoded body content from the request object and convert it to json
             '''
+            frappe.log_error("{0}".format(frappe.local.request.get_data()), "OCI Request Data")
             # decode to utf-8 and url unquote application/x-www-form-urlencoded body content
             request_data = unquote(frappe.local.request.get_data().decode("utf-8"))
 
