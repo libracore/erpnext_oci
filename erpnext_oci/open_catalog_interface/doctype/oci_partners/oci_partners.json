@@ -11,6 +11,8 @@
   "url",
   "validate",
   "detail",
+  "encoding",
+  "whitespace_replacement",
   "use_own_item_code",
   "url_parameter",
   "fields",
@@ -85,9 +87,20 @@
    "fieldname": "use_own_item_code",
    "fieldtype": "Check",
    "label": "Use Own Item Code"
+  },
+  {
+   "description": "The default is UTF-8",
+   "fieldname": "encoding",
+   "fieldtype": "Data",
+   "label": "Special Encoding Format"
+  },
+  {
+   "fieldname": "whitespace_replacement",
+   "fieldtype": "Data",
+   "label": "Special Char to replace with Whitespace"
   }
  ],
- "modified": "2024-02-07 09:40:15.585129",
+ "modified": "2024-02-16 14:54:06.565679",
  "modified_by": "Administrator",
  "module": "Open Catalog Interface",
  "name": "OCI Partners",

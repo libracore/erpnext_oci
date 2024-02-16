@@ -23,28 +23,28 @@ def create_hock_page():
                 workaround:
                 get manually the application/x-www-form-urlencoded body content from the request object and convert it to json
             '''
-            frappe.log_error("{0}".format(frappe.local.request.get_data()), "Raw: OCI Request Data")
-            frappe.log_error("{0}".format(unquote(frappe.local.request.get_data())), "unquote: OCI Request Data")
-            import chardet
-            frappe.log_error("{0}".format(frappe.local.request.get_data().decode(chardet.detect(frappe.local.request.get_data())['encoding'])), "chardet: OCI Request Data")
-            frappe.log_error("{0}".format(unquote(frappe.local.request.get_data()).decode(chardet.detect(unquote(frappe.local.request.get_data()))['encoding'])), "unquote & chardet: OCI Request Data")
             # decode to utf-8 and url unquote application/x-www-form-urlencoded body content
             request_data = unquote(frappe.local.request.get_data().decode("utf-8"))
-
-            # convert to json 
-            request_data_list = request_data.split("&")
-            request_data_list = [item.split('=') if '=' in item else (item, '') for item in request_data_list]
-            json_data = {key.upper(): value for key, value in request_data_list}
-            json_string = json.dumps(json_data, indent=2)
+            json_data, json_string = json_converter(request_data)
         
             if '~CALLER' in json_data:
+                special_encoding_definition = frappe.db.get_value("OCI Partners", json_data["~CALLER"], 'encoding')
+                if special_encoding_definition:
+                    request_data = unquote(frappe.local.request.get_data().decode(special_encoding_definition))
+                    json_data, json_string = json_converter(request_data)
+                whitespace_replacement = frappe.db.get_value("OCI Partners", json_data["~CALLER"], 'whitespace_replacement')
                 main_data = json_data
-                main_data_json_dump = json_string
+                main_data_json_dump = json_string.replace(whitespace_replacement, " ") if whitespace_replacement else json_string
             elif 'NEW_ITEM-MATNR[1]' in json_data:
                 # wago fallback lösung (bad!)
+                special_encoding_definition = frappe.db.get_value("OCI Partners", 'Wago', 'encoding')
+                if special_encoding_definition:
+                    request_data = unquote(frappe.local.request.get_data().decode(special_encoding_definition))
+                    json_data, json_string = json_converter(request_data)
+                whitespace_replacement = frappe.db.get_value("OCI Partners", 'Wago', 'whitespace_replacement')
                 json_data['~CALLER'] = 'Wago'
                 main_data = json_data
-                main_data_json_dump = json_string
+                main_data_json_dump = json_string.replace(whitespace_replacement, " ") if whitespace_replacement else json_string
         
         if not main_data:
             frappe.local.response["type"] = "redirect"
@@ -63,6 +63,14 @@ def create_hock_page():
         frappe.local.response["location"] = "/desk#List/OCI%20Basket/List"
     except Exception as err:
         frappe.log_error("{0}".format(err), 'OCI Failed: create_hock_page')
+
+def json_converter(request_data):
+    # convert to json 
+    request_data_list = request_data.split("&")
+    request_data_list = [item.split('=') if '=' in item else (item, '') for item in request_data_list]
+    json_data = {key.upper(): value for key, value in request_data_list}
+    json_string = json.dumps(json_data, indent=2)
+    return json_data, json_string
 
 
 
