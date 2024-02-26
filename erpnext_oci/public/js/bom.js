@@ -6,7 +6,8 @@ frappe.ui.form.on('BOM', {
                 oci_import(frm);
             });
         }
-    },
+    }
+    /*,
     before_save(frm) {
         // update total hours
         var total_hours = 0;
@@ -20,7 +21,7 @@ frappe.ui.form.on('BOM', {
         } catch {
             // do nothing
         }
-    }
+    }*/
 });
 
 function oci_import(frm) {
