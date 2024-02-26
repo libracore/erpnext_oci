@@ -15,7 +15,11 @@ frappe.ui.form.on('BOM', {
                 total_hours += frm.doc.items[i].qty;
             }
         }
-        cur_frm.set_value("total_hours", total_hours);
+        try {
+            cur_frm.set_value("total_hours", total_hours);
+        } catch {
+            // do nothing
+        }
     }
 });
 
